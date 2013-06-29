@@ -91,6 +91,13 @@ describe Memcacheable do
     it "raises on non-cached indexes" do
       expect { Person.fetch_by color: 'red' }.to raise_error
     end
+
+    it "flushes when model updated" do
+      person = Person.fetch_by good_criteria
+      person.update_attributes number: 7
+      Person.should_receive(:find_by).once
+      Person.fetch_by good_criteria
+    end
   end
 
   describe '::fetch_by!' do
@@ -104,21 +111,35 @@ describe Memcacheable do
   end
 
   describe 'flushing cached_indexes' do
-    let(:old_attr) {{ number: 42 }}
-    let(:new_attr) {{ number: 21 }}
+    let(:old_num) {{ number: 42 }}
+    let(:new_num) {{ number: 21 }}
+    let(:old_person) {{ person_id: id }}
+    let(:new_person) {{ person_id: 345 }}
+    let(:kittens) { 3.times.map { Kitten.new person_id: id} }
 
     before do
       Person.stub(:find_by) do |criteria|
         criteria.all?{ |k,v| person.send(k) == v } ? person : nil
       end
+      Kitten.stub(:where) do |criteria|
+        kittens.select do |kitten|
+          criteria.all? { |k,v| kitten.send(k) == v }
+        end
+      end
     end
 
     it "flushes old and new values for cached_indexes" do
-      Person.fetch_by(old_attr).should eq person
-      Person.fetch_by(new_attr).should eq nil
-      person.update_attributes new_attr
-      Person.fetch_by(old_attr).should eq nil
-      Person.fetch_by(new_attr).should eq person
+      Person.fetch_by(old_num).should eq person
+      Person.fetch_by(new_num).should eq nil
+      person.update_attributes new_num
+      Person.fetch_by(old_num).should eq nil
+      Person.fetch_by(new_num).should eq person
+
+      Kitten.fetch_where(old_person).should eq kittens
+      Kitten.fetch_where(new_person).should eq []
+      kittens.each { |k| k.update_attributes new_person }
+      Kitten.fetch_where(old_person).should eq []
+      Kitten.fetch_where(new_person).should eq kittens
     end
   end
 
@@ -207,6 +228,13 @@ describe Memcacheable do
 
     it "raises on non-cached indexes" do
       expect { Kitten.fetch_where id: 123 }.to raise_error
+    end
+
+    it "flushes when model updated" do
+      kittens = Kitten.fetch_where person_id: id
+      kittens.first.update_attributes person_id: 345
+      Kitten.should_receive(:where).once
+      Kitten.fetch_where person_id: id
     end
   end
 

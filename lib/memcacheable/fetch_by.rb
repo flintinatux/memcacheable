@@ -6,7 +6,7 @@ module Memcacheable
       self.klass = klass
       self.criteria = args.extract_options!
       raise "Only hash-style args accepted in fetch_by(). Illegal args: #{args.inspect}" if args.any?
-      raise "No cache_index found in #{klass.name} matching fields #{criteria.keys.inspect}!" unless criteria.empty? or klass.cached_indexes.include? criteria.keys.map(&:to_sym).sort  
+      raise "No cache_index found in #{klass.name} matching fields #{criteria.keys.inspect}!" unless klass.cached_indexes.include? criteria.keys.map(&:to_sym).sort  
     end
 
     def cache_key

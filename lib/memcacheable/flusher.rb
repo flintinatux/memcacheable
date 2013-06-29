@@ -23,6 +23,7 @@ module Memcacheable
         [OLD_VAL,NEW_VAL].each do |which|
           criteria = changed_criteria_for which, fields
           FetchBy.new(object.class, criteria).flush
+          FetchWhere.new(object.class, criteria).flush
         end
       end
     end
