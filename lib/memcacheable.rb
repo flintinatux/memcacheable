@@ -7,6 +7,7 @@ module Memcacheable
   autoload :FetchAssociation
   autoload :FetchBelongsTo
   autoload :FetchBy
+  autoload :FetchByCriteria
   autoload :FetchHasMany
   autoload :FetchHasOne
   autoload :FetchOne
