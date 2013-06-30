@@ -19,17 +19,12 @@ module Memcacheable
     def flush
       FetchOne.new(object.class, object.id).flush
       object.cached_indexes.each do |fields|
-        next unless previous_changes_included_in fields
         [OLD_VAL,NEW_VAL].each do |which|
           criteria = changed_criteria_for which, fields
           FetchBy.new(object.class, criteria).flush
           FetchWhere.new(object.class, criteria).flush
         end
       end
-    end
-
-    def previous_changes_included_in(fields)
-      object.previous_changes.keys.any? { |field| fields.include? field.to_sym }
     end
   end
 end

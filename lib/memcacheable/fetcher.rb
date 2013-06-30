@@ -13,7 +13,6 @@ module Memcacheable
     end
 
     def flush
-      debug :flush
       Rails.cache.delete cache_key
     end
   end
