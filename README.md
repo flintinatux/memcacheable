@@ -26,7 +26,7 @@ class Person < ActiveRecord::Base
 end
 ```
 
-Boom!  Now you can `fetch` a person by their id, like below.  When the person gets updated or touched, it will flush the cache, and the person will be reloaded on the next `fetch`.
+**Boom!**  Now you can `fetch` a person by their id, like below.  When the person gets updated or touched, it will flush the cache, and the person will be reloaded on the next `fetch`.
 
 ```ruby
 person = Person.fetch id  # caches the person
@@ -46,7 +46,7 @@ class Person < ActiveRecord::Base
 end
 ```
 
-Powerhouse time!  `cache_index` adds these index combinations to the list of cacheable things, so we can fetch single records with `fetch_by`, like this:
+**Mathematical!**  `cache_index` adds these index combinations to the list of cacheable things, so we can fetch single records with `fetch_by`, like this:
 
 ```ruby
 person = Person.fetch_by name: 'Scott'    # caches an awesome dude
@@ -59,10 +59,10 @@ person.update_attributes height: 71               # he shrunk? oh well, cache fl
 person = Person.fetch_by weight: 175, height: 71  # fetched and cached with new height
 ```
 
-Like noise in your life?  Try `fetch_by!` (hard to say: "fetch-by-_bang!_").
+Like noise in your life?  Try `fetch_by!` (hard to say: "fetch-by-bang!").
 
 ```ruby
-person = Person.fetch_by! name: 'Mork'  # => ActiveRecord::RecordNotFound
+person = Person.fetch_by! name: 'Mork'  # => raises ActiveRecord::RecordNotFound
 ```
 
 While `fetch_by` just pulls back just one record, you can fetch a collection with `fetch_where`:
@@ -130,7 +130,7 @@ dog = person.fetch_dog              # finds and caches Fido with his new name
 dog.fetch_person                    # gets the cached owner
 ```
 
-For a slight optimization, specify a `cache_index` on the foreign key of the association, like in the `Kitten` example above.  Memcacheable will then do a `fetch_by` or `fetch_where` as appropriate.  The cost: two copies in the cache.  The gain: when the parent changes but the children don't, the children can be reloaded from the cache.  Like this:
+For a slight optimization, specify a `cache_index` on the foreign key of the association, like in the `Kitten` example above.  Memcacheable will then do a `fetch_by` or `fetch_where` as appropriate.  **The cost:** two copies in the cache.  **The gain:** when the parent changes but the children don't, the children can be _reloaded from the cache._  Like this:
 
 ```ruby
 person.fetch_kittens  # caches the kittens both by criteria and as an association
