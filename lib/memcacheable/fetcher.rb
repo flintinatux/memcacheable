@@ -7,8 +7,7 @@ module Memcacheable
     def fetch
       debug :read
       Rails.cache.fetch cache_key do
-        debug :write
-        find_on_cache_miss
+        find_on_cache_miss.tap { debug :write }
       end
     end
 
