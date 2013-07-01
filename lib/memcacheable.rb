@@ -10,6 +10,7 @@ module Memcacheable
   autoload :FetchByCriteria
   autoload :FetchHasMany
   autoload :FetchHasOne
+  autoload :FetchMethod
   autoload :FetchOne
   autoload :FetchWhere
   autoload :Fetcher
@@ -50,6 +51,14 @@ module Memcacheable
 
     def cache_index(*fields)
       self.cached_indexes << fields.map(&:to_sym).sort
+    end
+
+    def cache_method(*methods)
+      methods.each do |method|
+        define_method "fetch_#{method}" do |*args|
+          FetchMethod.new(self, method, args).fetch
+        end
+      end
     end
 
     def fetch(id)

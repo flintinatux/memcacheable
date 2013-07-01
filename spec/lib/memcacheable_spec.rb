@@ -20,6 +20,11 @@ class Kitten < FakeModel
   include Memcacheable
   cache_index :person_id
   cache_belongs_to :person
+  cache_method :meow
+
+  def meow(how_many=1)
+    how_many.times.map{ 'meow' }.join ' '
+  end
 end
 
 describe Memcacheable do
@@ -175,6 +180,7 @@ describe Memcacheable do
   describe '::cache_has_one' do
     let(:dog) { Dog.new person_id: id }
     before do
+      person.stub(:dog).and_return dog
       Dog.stub(:find_by) do |criteria|
         criteria.all?{ |k,v| dog.send(k) == v } ? dog : nil
       end  
@@ -189,7 +195,7 @@ describe Memcacheable do
     end
 
     it "only queries once and then caches" do
-      Dog.should_receive(:find_by).once
+      person.should_receive(:dog).once
       person.fetch_dog
       person.fetch_dog
     end
@@ -197,7 +203,7 @@ describe Memcacheable do
     it "flushes when touched by association" do
       person.fetch_dog
       person.touch
-      Dog.should_receive(:find_by).once
+      person.should_receive(:dog).once
       person.fetch_dog
     end
   end
@@ -267,6 +273,31 @@ describe Memcacheable do
       person.touch
       Kitten.should_receive(:fetch_where).once
       person.fetch_kittens
+    end
+  end
+
+  describe '::cache_method' do
+    let(:kitten) { Kitten.new }
+
+    it "defines a new fetch method" do
+      kitten.should.respond_to?(:fetch_meow)
+    end
+
+    it "calls down to the method correctly on cache miss" do
+      kitten.fetch_meow(3) { |sound| sound.upcase }.should eq 'meow meow meow'
+    end
+
+    it "only queries once and then caches" do
+      kitten.should_receive(:meow).once
+      kitten.fetch_meow
+      kitten.fetch_meow
+    end
+
+    it "flushed when touched by an association" do
+      kitten.fetch_meow
+      kitten.touch
+      kitten.should_receive(:meow).once
+      kitten.fetch_meow
     end
   end
 end

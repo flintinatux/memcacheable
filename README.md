@@ -26,7 +26,7 @@ class Person < ActiveRecord::Base
 end
 ```
 
-**Boom!**  Now you can `fetch` a person by their id, like below.  When the person gets updated or touched, it will flush the cache, and the person will be reloaded on the next `fetch`.
+Boom!  Now you can `fetch` a person by their id, like below.  When the person gets updated or touched, it will flush the cache, and the person will be reloaded on the next `fetch`.
 
 ```ruby
 person = Person.fetch id  # caches the person
@@ -62,7 +62,7 @@ person = Person.fetch_by weight: 175, height: 71  # fetched and cached with new 
 Like noise in your life?  Try `fetch_by!` (hard to say: "fetch-by-bang!").
 
 ```ruby
-person = Person.fetch_by! name: 'Mork'  # => raises ActiveRecord::RecordNotFound
+person = Person.fetch_by! name: 'Mork'  # => ActiveRecord::RecordNotFound
 ```
 
 While `fetch_by` just pulls back just one record, you can fetch a collection with `fetch_where`:
@@ -88,7 +88,7 @@ Btw, don't do something stupid like trying to call scope methods on the result o
 Person.fetch_where(height: 60).limit(5)
 ```
 
-I may fix this later, though, because I like scopes.
+If you want something very similar to scopes, keep reading to learn about [caching methods](https://github.com/flintinatux/memcacheable#cache-methods).
 
 ### Cache associations
 
@@ -137,6 +137,31 @@ person.fetch_kittens  # caches the kittens both by criteria and as an associatio
 person.touch          # association cache is flushed, but not the fetch_where
 person.fetch_kittens  # reloads the kittens from the cache, and caches as an association
 ```
+
+### Cache methods
+
+Does your model have a method that eats up lots of calculation time, or perhaps a scope-like method that requires a database query?  Cache that bad boy!
+
+```ruby
+class Person < ActiveRecord::Base
+  has_many :kittens
+  
+  include Memcacheable
+  cache_method :random_kitten
+  
+  def random_kitten(seed=Random.new_seed)
+    kittens.sample(Random.new seed)
+  end
+end
+```
+
+**Voila!** Now you get a nice fetch method to cache the results:
+
+```ruby
+person.fetch_random_kitten(12345)   # => gets your random kitty, and then caches it
+```
+
+Notice that the fetch method accepts the same args as the original.  **Caveat:** blocks are not accepted, unfortunately.  I love blocks, but they don't have a consistent identifier to include in a cache key.  So feel free to get creative with args, but not blocks.
 
 ## Inspiration
 

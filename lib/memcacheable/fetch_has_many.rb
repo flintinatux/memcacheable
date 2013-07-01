@@ -6,7 +6,7 @@ module Memcacheable
 
     def find_on_cache_miss
       criteria = { "#{class_name}_id" => object.id }
-      fetchable? ? klass.fetch_where(criteria) : klass.where(criteria).to_a
+      fetchable? ? klass.fetch_where(criteria) : object.send(association).to_a
     end
 
     def klass

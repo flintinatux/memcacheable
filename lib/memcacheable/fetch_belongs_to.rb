@@ -1,11 +1,16 @@
 module Memcacheable
   class FetchBelongsTo < FetchAssociation
+    def fetchable?
+      klass.respond_to?(:fetch)
+    end
 
     def find_on_cache_miss
-      klass = association.to_s.camelize.constantize
       id = object.send "#{association}_id"
-      klass.respond_to?(:fetch) ? klass.fetch(id) : klass.find(id) rescue nil
+      fetchable? ? klass.fetch(id) : object.send(association) rescue nil
     end
-    
+
+    def klass
+      @klass ||= association.to_s.camelize.constantize
+    end
   end
 end
